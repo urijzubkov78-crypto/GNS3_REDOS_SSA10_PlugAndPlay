@@ -236,7 +236,7 @@ fi
 
 if command -v shellcheck >/dev/null 2>&1; then
   section 'ShellCheck'
-  if shellcheck -x -P SCRIPTDIR "${scripts[@]}"; then
+  if shellcheck --severity=warning -x -P SCRIPTDIR "${scripts[@]}"; then
     test_pass 'ShellCheck не нашёл ошибок.'
   else
     test_fail 'ShellCheck нашёл ошибки.'

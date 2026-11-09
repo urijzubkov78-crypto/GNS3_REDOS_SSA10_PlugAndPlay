@@ -130,6 +130,8 @@ tui_select_one() {
     case "${key}" in
       $'\033[A'|k|K) cursor=$(((cursor - 1 + ${#options[@]}) % ${#options[@]})) ;;
       $'\033[B'|j|J) cursor=$(((cursor + 1) % ${#options[@]})) ;;
+      # The nameref writes the selected value into the caller's variable.
+      # shellcheck disable=SC2034
       ''|' ') result_ref="${cursor}"; return 0 ;;
       q|Q|й|Й) die 'Мастер закрыт пользователем.' ;;
     esac

@@ -5,7 +5,7 @@ main() {
   local repo_url='https://github.com/urijzubkov78-crypto/GNS3_REDOS_SSA10_PlugAndPlay.git'
   local install_dir="${GNS3_INSTALL_DIR:-${HOME}/.local/share/gns3-redos/project}"
   local bootstrap_dir="${HOME}/.local/state/gns3-redos"
-  local bootstrap_log automatic=0 arg
+  local bootstrap_log automatic=0 arg code=0
   for arg in "$@"; do
     [[ "${arg}" != '--yes' && "${arg}" != '-y' ]] || automatic=1
   done
