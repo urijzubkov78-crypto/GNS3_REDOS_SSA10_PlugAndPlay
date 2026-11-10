@@ -299,52 +299,18 @@ else
   fail "GNS3 Server configuration is missing: ${gns3_config_file}"
 fi
 
-printf '%s\n' '=== GNS3 Server API smoke test ==='
-if command -v gns3server >/dev/null 2>&1 && command -v curl >/dev/null 2>&1; then
-  smoke_dir="$(mktemp -d -t gns3-server-check.XXXXXX)"
-  smoke_pid=''
-  cleanup_smoke() {
-    if [[ -n "${smoke_pid}" ]] && kill -0 "${smoke_pid}" 2>/dev/null; then
-      kill "${smoke_pid}" 2>/dev/null || true
-      wait "${smoke_pid}" 2>/dev/null || true
-    fi
-    case "${smoke_dir}" in
-      */gns3-server-check.*) rm -rf -- "${smoke_dir}" ;;
-    esac
-  }
-  trap cleanup_smoke EXIT INT TERM
-
-  smoke_port=3081
-  if command -v ss >/dev/null 2>&1; then
-    for candidate_port in 3081 3082 3083 3084 3085 3086 3087 3088 3089 3090; do
-      if ! ss -ltn 2>/dev/null | awk '{print $4}' | grep -Eq ":${candidate_port}$"; then
-        smoke_port="${candidate_port}"
-        break
-      fi
-    done
-  fi
-
-  gns3server --host 127.0.0.1 --port "${smoke_port}" --local --quiet \
-    >"${smoke_dir}/server.log" 2>&1 &
-  smoke_pid=$!
-  api_response=''
-  for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
-    api_response="$(curl -fsS --max-time 2 "http://127.0.0.1:${smoke_port}/v2/version" 2>/dev/null || true)"
-    [[ -n "${api_response}" ]] && break
-    kill -0 "${smoke_pid}" 2>/dev/null || break
-    sleep 0.5
-  done
-
-  if [[ "${api_response}" == *"${GNS3_VERSION}"* ]]; then
-    pass "GNS3 Server API answered on 127.0.0.1:${smoke_port} with version ${GNS3_VERSION}"
+printf '%s\n' '=== GNS3 Server API and registered templates ==='
+if command -v gns3server >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1; then
+  template_profile='full'
+  ((dynamips_only)) && template_profile='dynamips'
+  if python3 "${script_dir}/register_appliances.py" \
+      --profile "${template_profile}" --expected-version "${GNS3_VERSION}" --check; then
+    pass 'Local GNS3 API and all three SSA10 templates are ready'
   else
-    fail 'GNS3 Server API smoke test failed'
-    [[ -r "${smoke_dir}/server.log" ]] && tail -n 10 "${smoke_dir}/server.log"
+    fail "GNS3 API or templates check failed. Run bash setup.sh --profile ${template_profile} --templates"
   fi
-  cleanup_smoke
-  trap - EXIT INT TERM
 else
-  fail 'Cannot run API smoke test without gns3server and curl'
+  fail 'Cannot check GNS3 API without gns3server and python3'
 fi
 
 printf '%s\n' '=== Summary ==='

@@ -14,3 +14,17 @@ jobs:
         run: bash scripts/selftest.sh
       - name: Logging regression tests
         run: python3 -m unittest discover -s tests -v
+  gns3-registration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install the supported GNS3 controller
+        run: python3 -m pip install gns3-server==2.2.61
+      - name: Register templates, restart controller and verify persistence
+        env:
+          GNS3_INTEGRATION_REQUIRED: '1'
+        run: python3 -m unittest discover -s tests -p test_gns3_registration.py -v

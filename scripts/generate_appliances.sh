@@ -263,5 +263,5 @@ PY
 if ((copy_to_user)); then
   install -m 0644 "${output_dir}"/*.gns3a "${HOME}/GNS3/appliances/"
   printf '[OK] Templates copied to %s\n' "${HOME}/GNS3/appliances"
-  printf '[INFO] Open GNS3 -> File -> Import appliance and select files from that directory.\n'
+  printf '[INFO] The setup wizard registers these templates automatically; standalone generation only creates files.\n'
 fi

@@ -29,6 +29,7 @@ usage() {
   ./setup.sh --preflight            Только предварительная проверка
   ./setup.sh --install              Только установка программ
   ./setup.sh --images               Только проверка и импорт образов
+  ./setup.sh --templates            Создать и зарегистрировать шаблоны устройств
   ./setup.sh --verify               Итоговая диагностика
 
 Параметры:
@@ -50,7 +51,7 @@ log_init "${project_root}"
 
 while (($#)); do
   case "$1" in
-    --all|--preflight|--install|--images|--verify)
+    --all|--preflight|--install|--images|--templates|--verify)
       [[ -z "${action}" ]] || die 'Можно выбрать только одно действие.'
       action="${1#--}"
       ;;
@@ -87,6 +88,7 @@ interactive_menu() {
     'Только проверить готовность системы и образов'
     'Установить программные компоненты'
     'Проверить и импортировать образы'
+    'Создать и зарегистрировать шаблоны из установленных образов'
     'Проверить уже установленную систему'
   )
   local component_labels=() component_states=() component_locked=()
@@ -105,7 +107,8 @@ interactive_menu() {
     1) action='preflight' ;;
     2) action='install' ;;
     3) action='images' ;;
-    4) action='verify' ;;
+    4) action='templates' ;;
+    5) action='verify' ;;
   esac
 
   if [[ "${action}" == 'all' || "${action}" == 'install' ]]; then
@@ -240,9 +243,15 @@ run_images() {
     pass "Создана ссылка ${HOME}/GNS3/images -> /opt/gns3/images."
   fi
 
-  section 'Создание шаблонов устройств GNS3'
+  run_templates
+}
+
+run_templates() {
+  section 'Создание и регистрация шаблонов устройств GNS3'
   log_stage templates 'Создание шаблонов устройств GNS3'
   bash "${project_root}/scripts/generate_appliances.sh" --profile "${profile}"
+  log_stage template_registration 'Регистрация шаблонов в GNS3'
+  python3 "${project_root}/scripts/register_appliances.py" --profile "${profile}"
 }
 
 run_verify() {
@@ -272,6 +281,9 @@ case "${action}" in
   images)
     run_preflight
     run_images
+    ;;
+  templates)
+    run_templates
     ;;
   verify)
     run_verify
